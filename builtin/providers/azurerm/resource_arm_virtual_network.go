@@ -61,6 +61,10 @@ func resourceArmVirtualNetwork() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"route_table": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 				Set: resourceAzureSubnetHash,
@@ -93,7 +97,7 @@ func resourceArmVirtualNetworkCreate(d *schema.ResourceData, meta interface{}) e
 	vnet := network.VirtualNetwork{
 		Name:                           &name,
 		Location:                       &location,
-		VirtualNetworkPropertiesFormat: getVirtualNetworkProperties(d),
+		VirtualNetworkPropertiesFormat: getVirtualNetworkProperties(d, meta),
 		Tags: expandTags(tags),
 	}
 
@@ -187,7 +191,7 @@ func resourceArmVirtualNetworkDelete(d *schema.ResourceData, meta interface{}) e
 	return err
 }
 
-func getVirtualNetworkProperties(d *schema.ResourceData) *network.VirtualNetworkPropertiesFormat {
+func getVirtualNetworkProperties(d *schema.ResourceData, meta interface{}) *network.VirtualNetworkPropertiesFormat {
 	// first; get address space prefixes:
 	prefixes := []string{}
 	for _, prefix := range d.Get("address_space").([]interface{}) {
@@ -207,17 +211,38 @@ func getVirtualNetworkProperties(d *schema.ResourceData) *network.VirtualNetwork
 			subnet := subnet.(map[string]interface{})
 
 			name := subnet["name"].(string)
+			log.Printf("[INFO] setting subnets inside vNet, processing %q", name)
+			//since subnets can also be created outside of vNet definition (as root objects)
+			// do a GET on subnet properties from the server before setting them
+			resGroup := d.Get("resource_group_name").(string)
+			vnetName := d.Get("name").(string)
+			subnetObj := getExistingSubnet(resGroup, vnetName, name, meta)
+			log.Printf("[INFO] Completer GET of Subnet props ")
+
 			prefix := subnet["address_prefix"].(string)
 			secGroup := subnet["security_group"].(string)
+			routeTable := subnet["route_table"].(string)
 
-			var subnetObj network.Subnet
-			subnetObj.Name = &name
-			subnetObj.SubnetPropertiesFormat = &network.SubnetPropertiesFormat{}
-			subnetObj.SubnetPropertiesFormat.AddressPrefix = &prefix
+			if name != "" {
+				log.Printf("[INFO] setting SUBNETNAME TO %q", name)
+				subnetObj.Name = &name
+			}
+			if subnetObj.SubnetPropertiesFormat == nil {
+				subnetObj.SubnetPropertiesFormat = &network.SubnetPropertiesFormat{}
+			}
+			if subnetObj.SubnetPropertiesFormat.AddressPrefix == nil {
+				subnetObj.SubnetPropertiesFormat.AddressPrefix = &prefix
+			}
 
 			if secGroup != "" {
 				subnetObj.SubnetPropertiesFormat.NetworkSecurityGroup = &network.SecurityGroup{
 					ID: &secGroup,
+				}
+			}
+
+			if routeTable != "" {
+				subnetObj.SubnetPropertiesFormat.RouteTable = &network.RouteTable{
+					ID: &routeTable,
 				}
 			}
 
@@ -244,4 +269,39 @@ func resourceAzureSubnetHash(v interface{}) int {
 		subnet = subnet + securityGroup.(string)
 	}
 	return hashcode.String(subnet)
+}
+
+func getExistingSubnet(resGroup string, vnetName string, subnetName string, meta interface{}) network.Subnet {
+	//attempt to retrieve existing subnet from the server
+	existingSubnet := network.Subnet{}
+	subnetClient := meta.(*ArmClient).subnetClient
+	resp, err := subnetClient.Get(resGroup, vnetName, subnetName, "")
+
+	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			return existingSubnet
+		}
+	}
+
+	existingSubnet.SubnetPropertiesFormat = &network.SubnetPropertiesFormat{}
+	existingSubnet.SubnetPropertiesFormat.AddressPrefix = resp.SubnetPropertiesFormat.AddressPrefix
+
+	if resp.SubnetPropertiesFormat.NetworkSecurityGroup != nil {
+		existingSubnet.SubnetPropertiesFormat.NetworkSecurityGroup = resp.SubnetPropertiesFormat.NetworkSecurityGroup
+	}
+
+	if resp.SubnetPropertiesFormat.RouteTable != nil {
+		existingSubnet.SubnetPropertiesFormat.RouteTable = resp.SubnetPropertiesFormat.RouteTable
+	}
+
+	if resp.SubnetPropertiesFormat.IPConfigurations != nil {
+		ips := make([]string, 0, len(*resp.SubnetPropertiesFormat.IPConfigurations))
+		for _, ip := range *resp.SubnetPropertiesFormat.IPConfigurations {
+			ips = append(ips, *ip.ID)
+		}
+
+		existingSubnet.SubnetPropertiesFormat.IPConfigurations = resp.SubnetPropertiesFormat.IPConfigurations
+	}
+
+	return existingSubnet
 }
