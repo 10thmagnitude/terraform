@@ -2,71 +2,43 @@ variable "resource_group" {
   description = "The name of the resource group in which to create the virtual network."
 }
 
-variable "rg_prefix" {
-  description = "The shortened abbreviation to represent your resource group that will go on the front of some resources."
-}
-
-variable "hostname" {
-  description = "VM name referenced also in storage-related names."
-}
-
-variable "dns_name" {
-  description = " Label for the Domain Name. Will be used to make up the FQDN. If a domain name label is specified, an A DNS record is created for the public IP in the Microsoft Azure DNS system."
-}
-
 variable "location" {
   description = "The location/region where the virtual network is created. Changing this forces a new resource to be created."
+  default     = "southcentralus"
 }
 
-variable "virtual_network_name" {
-  description = "The name for the virtual network."
-  default     = "vnet"
+variable "sku" {
+  description = "SKU for the vault; allowed values are 'standard' and 'premium'."
+  default     = "standard"
+
+variable "tenant_id" {
+  description = "Tenant Id of the subscription. Get using Get-AzureRmSubscription cmdlet or Get Subscription API"
+}
+variable "object_id" {
+   description = "Object Id of the AD user. Get using Get-AzureRmADUser or Get-AzureRmADServicePrincipal cmdlets"
 }
 
-variable "address_space" {
-  description = "The address space that is used by the virtual network. You can supply more than one address space. Changing this forces a new resource to be created."
-  default     = "10.0.0.0/16"
+variable "key_permissions" {
+  description = "Permissions to keys in the vault. Valid values are: all, create, import, update, get, list, delete, backup, restore, encrypt, decrypt, wrapkey, unwrapkey, sign, and verify."
+  default     = "all"
 }
 
-variable "subnet_prefix" {
-  description = "The address prefix to use for the subnet."
-  default     = "10.0.10.0/24"
+variable "secret_permissions" {
+  description = "Permissions to secrets in the vault. Valid values are: all, get, set, list, and delete."
+  default     = "get"
 }
 
-variable "storage_account_type" {
-  description = "Specifies the name of the storage account. Changing this forces a new resource to be created. This must be unique across the entire Azure service, not just within the resource group."
-  default     = "Standard_LRS"
+variable "enabled_for_deployment" {
+  description = "Specifies if the vault is enabled for a VM deployment"
+  default     = false
 }
 
-variable "vm_size" {
-  description = "Specifies the name of the virtual machine resource. Changing this forces a new resource to be created."
-  default     = "Standard_A0"
+variable "enabled_for_disk_encryption" {
+  description = "Specifies if the azure platform has access to the vault for enabling disk encryption scenarios."
+  default     = false
 }
 
-variable "image_publisher" {
-  description = "name of the publisher of the image (az vm image list)"
-  default     = "Canonical"
-}
-
-variable "image_offer" {
-  description = "the name of the offer (az vm image list)"
-  default     = "UbuntuServer"
-}
-
-variable "image_sku" {
-  description = "image sku to apply (az vm image list)"
-  default     = "16.04-LTS"
-}
-
-variable "image_version" {
-  description = "version of the image to apply (az vm image list)"
-  default     = "latest"
-}
-
-variable "admin_username" {
-  description = "administrator user name"
-}
-
-variable "admin_password" {
-  description = "administrator password (recommended to disable password auth)"
+variable "enabled_for_template_deployment" {
+  description = "Specifies whether Azure Resource Manager is permitted to retrieve secrets from the key vault."
+  default     = false
 }

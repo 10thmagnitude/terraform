@@ -10,7 +10,7 @@
 This template creates a Key Vault. For more information, go to: http://azure.microsoft.com/en-us/documentation/services/key-vault/
 
 
-## azuredeploy.tf
+## main.tf
 The `azuredeploy.tf` file contains the actual resources that will be deployed. It also contains the Azure Resource Group definition and any defined variables. 
 
 ## outputs.tf
