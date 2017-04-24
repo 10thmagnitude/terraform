@@ -4,9 +4,9 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_key_vault" "vault" {
-  name                = "myvault"
+  name                = "${var.vault_name}"
   location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.vault.name}"
+  resource_group_name = "${azurerm_resource_group.rg.name}"
   sku {
     name = "standard"
   }

@@ -7,13 +7,19 @@ variable "location" {
   default     = "southcentralus"
 }
 
+variable "vault_name" {
+  description = "The name of the vault resource"
+}
+
 variable "sku" {
   description = "SKU for the vault; allowed values are 'standard' and 'premium'."
   default     = "standard"
+}
 
 variable "tenant_id" {
   description = "Tenant Id of the subscription. Get using Get-AzureRmSubscription cmdlet or Get Subscription API"
 }
+
 variable "object_id" {
    description = "Object Id of the AD user. Get using Get-AzureRmADUser or Get-AzureRmADServicePrincipal cmdlets"
 }
