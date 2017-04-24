@@ -22,6 +22,7 @@ variable "tenant_id" {
 
 variable "object_id" {
   description = "Object Id of the AD user. Get using Get-AzureRmADUser or Get-AzureRmADServicePrincipal cmdlets"
+  default     = "add2e23a-2790-4cac-81c7-610529237740"
 }
 
 variable "key_permissions" {
