@@ -14,7 +14,11 @@ docker run --rm -it \
   -v $(pwd):/data \
   --entrypoint "/bin/sh" \
   hashicorp/terraform:light \
-  -c "cd /data; /bin/terraform get; /bin/terraform plan -var resource_group=$KEY -var vault_name=$KEY -var tenant_id=$ARM_TENANT_ID -out=out.tfplan; /bin/terraform apply out.tfplan"
+  -c "cd /data; \
+      /bin/terraform get; \
+      /bin/terraform validate; \
+      /bin/terraform plan -out=out.tfplan -var resource_group=$KEY -var vault_name=$KEY -var tenant_id=$ARM_TENANT_ID -var object_id=$object_id; \
+      /bin/terraform apply out.tfplan"
 
 # TODO: determine external validation, possibly Azure CLI
 
