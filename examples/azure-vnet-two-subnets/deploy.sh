@@ -14,7 +14,7 @@ docker run --rm -it \
   -v $(pwd):/data \
   --entrypoint "/bin/sh" \
   hashicorp/terraform:light \
-  -c "cd /data; \
+  -c "--workdir=/data; \
       /bin/terraform get; \
       /bin/terraform validate; \
       /bin/terraform plan -out=out.tfplan; \
