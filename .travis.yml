@@ -5,13 +5,17 @@ services:
 
 language: generic
 
+# on branches: ignore multiple commits that will queue build jobs, just run latest commit
+git:
+  depth: 1
+
 # establish environment variables
 env:
-  - TEST_DIR=examples/azure-vm-simple-linux
+  - TEST_DIR=examples/azure-vnet-two-subnets
 
 branches:
   only:
-  - master
+  - /^(?i:topic)-.*$/
 
 # install terraform
 before_deploy:
@@ -22,10 +26,14 @@ before_deploy:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: cd $TRAVIS_BUILD_DIR/$TEST_DIR && ./deploy.sh
+    script: cd $TEST_DIR && ./deploy.sh
     on:
       repo: 10thmagnitude/terraform
-      branch: master
+      branch: topic-vnet-two-subnets
 
 # destroy resources with Azure CLI
-after_deploy: cd $TRAVIS_BUILD_DIR/$TEST_DIR && ./after_deploy.sh
+after_deploy:
+  - docker run --rm -it \
+      azuresdk/azure-cli-python \
+      sh -c "az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID; \
+             az group delete -y -n $KEY"
