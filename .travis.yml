@@ -7,7 +7,7 @@ language: generic
 
 # establish environment variables
 env:
-  - TEST_DIR=examples/azure-acs-kubernetes
+  - TEST_DIR=examples/azure-encrypt-running-linux-vm
 
 branches:
   only:
@@ -25,7 +25,7 @@ deploy:
     script: cd $TRAVIS_BUILD_DIR/$TEST_DIR && ./deploy.sh
     on:
       repo: 10thmagnitude/terraform
-      branch: topic-101-acs-kubernetes
+      branch: topic-201-encrypt-running-linux-vm
 
 # destroy resources with Azure CLI
 after_deploy: cd $TRAVIS_BUILD_DIR/$TEST_DIR && ./after_deploy.sh
